@@ -194,6 +194,36 @@ function PhoneMockup() {
 
 export default function App() {
   const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [formStatus, setFormStatus] = useState("idle");
+
+  async function handleBetaSignup(event) {
+    event.preventDefault();
+    setFormStatus("loading");
+
+    try {
+      const response = await fetch("https://formspree.io/f/mkoerjwg", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          source: "Checkpoint landing page",
+        }),
+      });
+
+      if (response.ok) {
+        setFormStatus("success");
+        setEmail("");
+      } else {
+        setFormStatus("error");
+      }
+    } catch (error) {
+      setFormStatus("error");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f7fbff] text-slate-900">
@@ -463,8 +493,12 @@ export default function App() {
                   "Private check-ins and sensitive data controls",
                   "Positioned as support, not therapy replacement",
                 ].map((item) => (
-                  <div key={item} className="flex gap-3 rounded-3xl bg-slate-50 p-5">
+                  <div
+                    key={item}
+                    className="flex gap-3 rounded-3xl bg-slate-50 p-5"
+                  >
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-teal-500" />
+
                     <p className="font-semibold leading-7 text-slate-700">
                       {item}
                     </p>
@@ -489,20 +523,41 @@ export default function App() {
               support earlier.
             </p>
 
-            <form className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-3xl bg-white p-3 sm:flex-row">
+            <form
+              onSubmit={handleBetaSignup}
+              className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-3xl bg-white p-3 sm:flex-row"
+            >
               <input
                 type="email"
+                name="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="Enter your email"
                 className="min-h-14 flex-1 rounded-2xl border-0 px-5 text-blue-950 outline-none placeholder:text-slate-400"
               />
 
               <button
-                type="button"
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-blue-700 px-6 font-extrabold text-white transition hover:bg-blue-800"
+                type="submit"
+                disabled={formStatus === "loading"}
+                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-blue-700 px-6 font-extrabold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Join beta <ArrowRight className="h-5 w-5" />
+                {formStatus === "loading" ? "Joining..." : "Join beta"}
+                <ArrowRight className="h-5 w-5" />
               </button>
             </form>
+
+            {formStatus === "success" && (
+              <p className="mt-4 text-sm font-bold text-cyan-200">
+                You’re on the beta list. Check your inbox for confirmation.
+              </p>
+            )}
+
+            {formStatus === "error" && (
+              <p className="mt-4 text-sm font-bold text-red-200">
+                Something went wrong. Please try again.
+              </p>
+            )}
 
             <p className="mt-4 text-sm text-blue-200">
               No spam. Early product updates only.
